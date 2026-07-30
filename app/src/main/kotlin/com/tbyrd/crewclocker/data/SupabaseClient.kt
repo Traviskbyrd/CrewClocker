@@ -2,7 +2,7 @@ package com.tbyrd.crewclocker.data
 
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.gotrue.GoTrue
+import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.postgrest.postgrest
 
@@ -17,7 +17,7 @@ object SupabaseClient {
         supabaseKey = SUPABASE_ANON_KEY
     ) {
         install(Postgrest)
-        install(GoTrue)
+        install(Auth)
     }
 
     val auth = client.auth
