@@ -26,6 +26,10 @@
             android:name=".services.LocationTrackingService"
             android:foregroundServiceType="location"
             android:exported="false" />
+
+        <receiver
+            android:name=".services.GeofenceBroadcastReceiver"
+            android:exported="false" />
             
     </application>
 </manifest>

@@ -1,5 +1,6 @@
 package com.tbyrd.crewclocker.ui
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
