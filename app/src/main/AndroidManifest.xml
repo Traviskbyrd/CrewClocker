@@ -15,6 +15,11 @@
         android:label="CrewClocker"
         android:theme="@style/Theme.Material3.DayNight">
         
+        <!-- Google Maps API Key from local.properties -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${mapsApiKey}" />
+        
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
