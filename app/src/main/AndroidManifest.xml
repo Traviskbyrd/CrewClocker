@@ -13,7 +13,7 @@
         android:allowBackup="true"
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="CrewClocker"
-        android:theme="@style/Theme.Material3.DayNight">
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
         
         <!-- Google Maps API Key from local.properties -->
         <meta-data
