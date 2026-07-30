@@ -10,5 +10,6 @@ data class Job(
     val lat: Double,
     val lng: Double,
     val radius_meters: Int = 100,
-    val status: String = "active"
+    val status: String = "active",
+    val created_at: String? = null
 )
