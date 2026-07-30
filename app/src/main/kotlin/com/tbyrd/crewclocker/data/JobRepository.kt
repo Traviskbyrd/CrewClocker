@@ -11,8 +11,10 @@ class JobRepository {
     // Fetches only 'active' jobs to keep the UI clean
     suspend fun getActiveJobs(): List<Job> = withContext(Dispatchers.IO) {
         supabase.from("jobs")
-            .select() {
-                filter("status", FilterOperator.EQ, "active")
+            .select {
+                filter {
+                    eq("status", "active")
+                }
             }
             .decodeList<Job>()
     }
