@@ -5,6 +5,8 @@ import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.gotrue.Auth
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.serializer.KotlinXSerializer
+import kotlinx.serialization.json.Json
 
 // This module handles the connection to your Supabase project (jpppwigxbnbhqlhsekkz)
 object SupabaseClient {
@@ -18,6 +20,11 @@ object SupabaseClient {
     ) {
         install(Postgrest)
         install(Auth)
+        
+        defaultSerializer = KotlinXSerializer(Json {
+            ignoreUnknownKeys = true
+            coerceInputValues = true
+        })
     }
 
     val auth = client.auth
