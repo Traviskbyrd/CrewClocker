@@ -1,0 +1,10 @@
+# Android/Gradle gitignore
+
+.gradle/
+build/
+capture/
+local.properties
+.idea/
+*.iml
+.DS_Store
+*.log
