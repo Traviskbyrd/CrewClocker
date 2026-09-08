@@ -1,5 +1,40 @@
 # CrewClocker implementation checkpoint — 2026-09-08
 
+## Android build work — 2026-09-08
+
+Flutter 3.47.2 (Dart 3.13.2) is installed in the build session. The earlier SDK
+blocker was resolved by using the official Flutter Git repository. Inspection
+of Flutter's `bot_detector.dart` identified its automatic Azure metadata probe;
+standard `CI=true` short-circuits that probe. No metadata service was contacted.
+Archive extraction uses `TAR_OPTIONS=--no-same-owner` for this container.
+
+Android platform source has been generated and the Activity now installs
+TrackingChannel. Manifest declares location permissions and the private geofence
+receiver. The preview package is `com.tbyrd.crewclocker.preview`, min SDK 26.
+Flutter dependencies are locked in `mobile/pubspec.lock`; Maps requires Dart 3.10
+or newer, so the declared lower bound was corrected. The Supabase initialization
+uses the installed package's `publishableKey` parameter.
+
+Local verification: `flutter analyze --no-pub` reports no issues. All four Flutter
+tests pass (the original eleven logic checks plus three screen tests). The
+standalone runner also reports eleven passing checks. No phone test has occurred.
+
+The pre-sign-in Device check screen reads native health only. Maps and job editing
+remain disabled until a restricted Android Maps key is configured; backend
+configuration reuses the original prototype's URL and publishable key. No account
+or schema was created and no live backend writes were performed.
+
+GitHub build: https://github.com/Traviskbyrd/CrewClocker/actions/runs/34286786361
+Result: SUCCESS. Android Kotlin/Gradle compilation and APK upload completed.
+Built source commit: `1f705e29d7644eb5334c1324e237caed1cee657e`.
+Artifact: https://github.com/Traviskbyrd/CrewClocker/actions/runs/34286786361/artifacts/10079926160
+APK size: 83,778,293 bytes. SHA-256:
+`996bf227788a8e6b6757d7685723ebdc02cdd085bcc42a03120b68a3a8d0c5fb`.
+Downloaded archive digest matched GitHub; APK checksum matched the build's
+checksum file. ZIP integrity and ARM64 Flutter library presence were checked.
+A physical phone installation and background behavior remain UNTESTED.
+Read `docs/ANDROID_PREVIEW.md` for scope, installation and remaining gates.
+
 ## Checkpoint transferred — 2026-09-08
 
 The supplied patch was applied cleanly and saved to GitHub on
@@ -13,7 +48,7 @@ official Flutter Linux release manifest returned HTTP 404, so platform generatio
 compilation and rerunning the eleven checks remain unverified in this session.
 The eleven passing checks below describe the original checkpoint only.
 
-## Exact status
+## Original checkpoint status (historical)
 
 This is the first source checkpoint, NOT the Android evaluation build and NOT an installable APK.
 Base: Traviskbyrd/CrewClocker at 336ffaebe22293162252c70874fe5376d5ceb4af.
