@@ -1,5 +1,18 @@
 # CrewClocker implementation checkpoint — 2026-09-08
 
+## Checkpoint transferred — 2026-09-08
+
+The supplied patch was applied cleanly and saved to GitHub on
+`codex/crewclocker-development` in commit
+`2e9cb6ac7c99d940fc4ab3a05bb9df05a7039965`. Existing prototype files were
+preserved. GitHub read/write access is now verified; the earlier access blocker
+below is historical. Target Android evaluation phone: Samsung Galaxy S26 Ultra.
+
+This runtime has Java but no Flutter or Dart executable on PATH. Fetching the
+official Flutter Linux release manifest returned HTTP 404, so platform generation,
+compilation and rerunning the eleven checks remain unverified in this session.
+The eleven passing checks below describe the original checkpoint only.
+
 ## Exact status
 
 This is the first source checkpoint, NOT the Android evaluation build and NOT an installable APK.
