@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'data/crew_repository.dart';
 import 'ui/workspace.dart';
+import 'ui/device_check.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,9 +14,10 @@ Future<void> main() async {
     setupError = 'This build needs its Supabase connection configured.';
   } else {
     try {
-      await Supabase.initialize(url: url, anonKey: key);
+      await Supabase.initialize(url: url, publishableKey: key);
     } catch (_) {
-      setupError = 'The connection could not be initialized. Check this build’s configuration.';
+      setupError =
+          'The connection could not be initialized. Check this build’s configuration.';
     }
   }
   runApp(CrewClockerApp(setupError: setupError));
@@ -41,7 +43,23 @@ class CrewClockerApp extends StatelessWidget {
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(setupError!),
+                child: Builder(
+                  builder: (context) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(setupError!),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const DeviceCheckScreen(),
+                          ),
+                        ),
+                        child: const Text('Check this phone'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           )
@@ -167,6 +185,16 @@ class _SignInState extends State<SignInScreen> {
                 const Text(
                   'Use the account provided by your company.',
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                TextButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const DeviceCheckScreen(),
+                    ),
+                  ),
+                  icon: const Icon(Icons.phone_android),
+                  label: const Text('Check this phone'),
                 ),
               ],
             ),

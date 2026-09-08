@@ -1,0 +1,59 @@
+name: Android preview APK
+
+on:
+  push:
+    branches: [codex/crewclocker-development]
+    paths: ['mobile/**', '.github/workflows/android-preview.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-preview-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      CI: 'true'
+      FLUTTER_SUPPRESS_ANALYTICS: 'true'
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install pinned Flutter SDK
+        run: |
+          git clone --depth 1 --branch 3.47.2 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = d3b14c876900e553bc736ca19295fc09e3853e8e
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Analyze and test
+        run: |
+          flutter analyze
+          dart test/tracking_standalone.dart
+          flutter test
+      - name: Build Android ARM64 preview
+        run: flutter build apk --debug --target-platform android-arm64 --dart-define-from-file=config/development.json
+      - name: Prepare download
+        run: |
+          mkdir -p build/delivery
+          cp build/app/outputs/flutter-apk/app-debug.apk build/delivery/CrewClocker-preview.apk
+          cp ../docs/ANDROID_PREVIEW.md build/delivery/READ-ME.md
+          cd build/delivery
+          sha256sum CrewClocker-preview.apk > SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CrewClocker-Android-preview
+          path: mobile/build/delivery/
+          if-no-files-found: error
+          retention-days: 14

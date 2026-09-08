@@ -5,6 +5,8 @@ import '../data/crew_repository.dart';
 import '../domain/tracking.dart';
 import '../platform/tracking_bridge.dart';
 
+const _mapsEnabled = bool.fromEnvironment('MAPS_ENABLED');
+
 class CrewWorkspace extends StatefulWidget {
   const CrewWorkspace({super.key, required this.repository});
   final CrewRepository repository;
@@ -142,10 +144,12 @@ class _WorkspaceState extends State<CrewWorkspace> {
           itemCount: time.length,
           itemBuilder: (context, i) {
             final entry = time[i];
-            final start = DateTime.tryParse(entry['clock_in']?.toString() ?? '')
-                ?.toLocal();
-            final end = DateTime.tryParse(entry['clock_out']?.toString() ?? '')
-                ?.toLocal();
+            final start = DateTime.tryParse(
+              entry['clock_in']?.toString() ?? '',
+            )?.toLocal();
+            final end = DateTime.tryParse(
+              entry['clock_out']?.toString() ?? '',
+            )?.toLocal();
             final job = entry['jobs'] as Map?;
             return Card(
               child: ListTile(
@@ -161,7 +165,7 @@ class _WorkspaceState extends State<CrewWorkspace> {
         );
   Widget jobsView() => Column(
     children: [
-      if (role == 'admin')
+      if (role == 'admin' && _mapsEnabled)
         Padding(
           padding: const EdgeInsets.all(12),
           child: FilledButton.icon(
@@ -180,6 +184,13 @@ class _WorkspaceState extends State<CrewWorkspace> {
       Expanded(
         child: jobs.isEmpty
             ? const Center(child: Text('No active job sites.'))
+            : !_mapsEnabled
+            ? const Center(
+                child: Text(
+                  'Map preview is not configured yet.\nYour job sites are listed below.',
+                  textAlign: TextAlign.center,
+                ),
+              )
             : GoogleMap(
                 initialCameraPosition: CameraPosition(
                   target: LatLng(jobs.first.latitude, jobs.first.longitude),
@@ -355,7 +366,8 @@ class _JobEditorState extends State<JobEditor> {
     } catch (_) {
       if (mounted)
         setState(
-          () => error = 'Job not saved. The secured job-saving service must be available and your account must have permission.',
+          () => error =
+              'Job not saved. The secured job-saving service must be available and your account must have permission.',
         );
     } finally {
       if (mounted) setState(() => saving = false);
@@ -416,7 +428,8 @@ class _JobEditorState extends State<JobEditor> {
                   enabled: !saving,
                   decoration: const InputDecoration(
                     labelText: 'Address label (optional)',
-                    helperText: 'Address search is not connected in this development build.',
+                    helperText:
+                        'Address search is not connected in this development build.',
                   ),
                 ),
                 const SizedBox(height: 8),
