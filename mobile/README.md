@@ -27,13 +27,22 @@ source changes. The APK is an engineering preview, not a payroll-ready app.
 `config/development.json` reuses the prototype's Supabase URL and publishable
 client key. It contains no server/service-role key. Other environments can supply
 `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` via Dart defines or a local JSON file.
-Database authorization must be completed before real crew use.
+The field-test migrations are deployed and authorization checks pass; see build status for remaining production gates.
 
-Maps are off by default. To enable them in a configured build, set the
-`ANDROID_MAPS_API_KEY` build environment variable and add
-`--dart-define=MAPS_ENABLED=true`. Restrict that key to the preview package and
-signing certificate. The server's address-search key must never be used here.
+The field-test job editor uses OpenStreetMap tiles with visible attribution. Tap
+the map to place a job pin; the address is a label, not geocoded. No Google Maps
+key is required for this flow. The original Google Maps prototype remains in the
+source but is not the active field-test editor.
 
-**Check this phone** is available before sign-in. It reads native status without
-starting monitoring. Automated registration, upload, and payroll reconciliation
-are still disabled or incomplete; see the build-status document.
+**Check this phone** is available before sign-in and reads native status without
+starting monitoring. After sign-in, create your company and a self-assigned test
+site, follow the permission steps, and explicitly enable monitoring. Android
+captures raw observations in SQLite; Flutter uploads them while open/resumed.
+There is no native background upload worker or payroll reconciliation yet.
+
+The workflow also runs `./gradlew :app:testDebugUnitTest` from `android` to test
+journal persistence, exact acknowledgements, account handoff, and v1 migration.
+The downloadable field APK is re-signed with the retained internal signing key.
+A fresh CI debug artifact has a temporary certificate; do not distribute it as
+an update to the signed field APK. The original 0.1 preview must be uninstalled
+once before installing 0.2. Never commit signing credentials to this repository.

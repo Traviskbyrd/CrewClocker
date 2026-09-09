@@ -1,4 +1,4 @@
-# CrewClocker implementation checkpoint — 2026-09-08
+# CrewClocker build status — 2026-09-09
 
 ## Field test 0.2 — 2026-09-09
 
@@ -19,8 +19,26 @@ unrestricted prototype reads and the public admin helper were restricted.
 `backend/tests/field_authorization.sql` passed 17 checks using rolled-back test
 fixtures. The database tests do not verify real email delivery or phone location.
 Seven Flutter tests pass, including the eleven existing logic checks. Analysis
-reports no issues. Native Kotlin/journal tests and the Android build are pending
-at the time of this source checkpoint.
+reports no issues. Android compilation and all three native journal tests pass.
+The first native test run exposed a SQLiteOpenHelper Closeable compatibility issue
+on API 28; EventJournal now explicitly implements Closeable, and the same tests
+pass. The physical phone still needs the full arrival/departure/reboot protocol.
+
+Successful build: https://github.com/Traviskbyrd/CrewClocker/actions/runs/34296234080
+Built source: `aebf89b71a9ca522dd06cce8c4193f70a103ce92`.
+Delivered file: `CrewClocker-field-test.apk`, version 0.2.0+2, ARM64,
+87,602,748 bytes. SHA-256:
+`d5538f09fcb1e7f35b5eb59c0f290d4267352b66757ab2c8ec2510bf73c946da`.
+The downloaded archive digest matched GitHub and the original APK matched the
+workflow checksum. The delivered APK was then signed with the retained private
+internal key, and APK v2/v3 signatures and ZIP integrity verified successfully.
+Certificate SHA-256:
+`547ee7971d55ca5b12cf96b247fbc55bebf4e75a68d224f27ba3c19efdaf855c`.
+The key and its configuration are saved privately as
+`CrewClocker-internal-signing.p12` and `CrewClocker-internal-signing.json`, outside
+GitHub. Reuse them for future field updates; never commit them or distribute the
+runner's temporary debug-signed artifact as an update. Uninstall the original
+0.1 installation-only preview once before installing this differently signed APK.
 
 See ANDROID_PREVIEW.md for the field protocol and explicit limitations. Uploads
 run while Flutter is open/resumed; there is no native background network worker.
@@ -33,7 +51,7 @@ Remaining project-level advisories (not introduced by the field tables):
 [Postgres security upgrade](https://supabase.com/docs/guides/platform/upgrading).
 These are production-readiness follow-ups. No new table/function advisory remains.
 
-## Android build work — 2026-09-08
+## Android build work — 2026-09-08 (historical)
 
 Flutter 3.47.2 (Dart 3.13.2) is installed in the build session. The earlier SDK
 blocker was resolved by using the official Flutter Git repository. Inspection
@@ -130,7 +148,7 @@ The starter repository applies an own-user filter to time reads, but that is not
 a substitute for server authorization. Existing profile policies and helper
 functions need further review. No owner profile exists in the observed table.
 
-## Required next work, in dependency order
+## Original required work, in dependency order (historical)
 
 1. Restore GitHub integration Contents read/write permission on CrewClocker.
 2. Complete Flutter platform generation in an approved runtime, preserving
@@ -151,7 +169,7 @@ functions need further review. No owner profile exists in the observed table.
    internal build for the Galaxy S26 Ultra background-tracking proof.
 10. Complete independent iOS adapter and physical iPhone spike, then pilot gates.
 
-## Deliberate limits of this checkpoint
+## Original checkpoint limits (historical)
 
 No demo data simulates completed backend writes. Job save calls the versioned
 RPC and reports failure until it is deployed. Address input is a label, not yet
