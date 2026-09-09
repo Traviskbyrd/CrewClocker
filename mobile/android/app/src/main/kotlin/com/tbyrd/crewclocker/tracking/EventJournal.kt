@@ -9,7 +9,7 @@ import java.time.Instant
 import java.util.UUID
 
 /** Native-owned append-only capture, including when Flutter is not running. */
-class EventJournal(context: Context) : SQLiteOpenHelper(context, "crewclocker_events.db", null, 2) {
+class EventJournal(context: Context) : SQLiteOpenHelper(context, "crewclocker_events.db", null, 2), java.io.Closeable {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""CREATE TABLE observations (
             sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT NOT NULL UNIQUE,

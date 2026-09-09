@@ -664,15 +664,23 @@ class _FieldSiteEditorState extends State<FieldSiteEditor> {
                       ),
                     ],
                   ),
-                RichAttributionWidget(
-                  attributions: [
-                    TextSourceAttribution(
-                      'OpenStreetMap contributors',
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Material(
+                    color: Colors.white,
+                    child: InkWell(
                       onTap: () => launchUrl(
                         Uri.parse('https://www.openstreetmap.org/copyright'),
                       ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(
+                          '© OpenStreetMap contributors',
+                          style: TextStyle(fontSize: 11, color: Colors.black),
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
