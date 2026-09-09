@@ -50,6 +50,8 @@ flutter {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.16.1")
     implementation("androidx.core:core-ktx:1.17.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
 }

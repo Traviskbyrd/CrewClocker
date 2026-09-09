@@ -52,7 +52,7 @@ class _DeviceCheckState extends State<DeviceCheckScreen> {
         padding: const EdgeInsets.all(20),
         children: [
           Text(
-            'CrewClocker • Engineering preview',
+            'CrewClocker • Field test 0.2',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
@@ -97,8 +97,8 @@ class _DeviceCheckState extends State<DeviceCheckScreen> {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Location permissions can remain off for this installation check. '
-            'Automatic timekeeping and account onboarding are still being completed.',
+            'Use the Today screen for guided location permissions and site monitoring. '
+            'This diagnostic screen does not start or stop monitoring.',
           ),
         ],
       ),

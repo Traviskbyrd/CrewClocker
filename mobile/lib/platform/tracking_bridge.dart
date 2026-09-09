@@ -7,6 +7,18 @@ class TrackingBridge {
   Future<Map<String, dynamic>> health() async => Map<String, dynamic>.from(
     await _channel.invokeMapMethod<String, dynamic>('health') ?? {},
   );
+  Future<Map<String, dynamic>> currentLocation() async =>
+      Map<String, dynamic>.from(
+        await _channel.invokeMapMethod<String, dynamic>('currentLocation') ??
+            {},
+      );
+  Future<void> registerAssignments(
+    String employeeId,
+    List<Map<String, dynamic>> sites,
+  ) => _channel.invokeMethod('register', {
+    'employeeId': employeeId,
+    'sites': sites,
+  });
   Future<void> requestForegroundPermission() =>
       _channel.invokeMethod('requestForegroundPermission');
   Future<void> openSettings() => _channel.invokeMethod('openSettings');

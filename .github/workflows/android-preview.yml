@@ -44,6 +44,8 @@ jobs:
           flutter test
       - name: Build Android ARM64 preview
         run: flutter build apk --debug --target-platform android-arm64 --dart-define-from-file=config/development.json
+      - name: Test native observation journal
+        run: cd android && ./gradlew testDebugUnitTest
       - name: Prepare download
         run: |
           mkdir -p build/delivery

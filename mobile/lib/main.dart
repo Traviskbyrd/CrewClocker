@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'data/crew_repository.dart';
-import 'ui/workspace.dart';
+import 'data/field_repository.dart';
+import 'ui/field_workspace.dart';
 import 'ui/device_check.dart';
 
 Future<void> main() async {
@@ -76,7 +76,10 @@ class SessionGate extends StatelessWidget {
       stream: client.auth.onAuthStateChange,
       builder: (context, snapshot) => client.auth.currentSession == null
           ? const SignInScreen()
-          : CrewWorkspace(repository: CrewRepository(client)),
+          : FieldWorkspace(
+              key: ValueKey(client.auth.currentUser!.id),
+              repository: FieldRepository(client),
+            ),
     );
   }
 }
@@ -90,6 +93,8 @@ class SignInScreen extends StatefulWidget {
 class _SignInState extends State<SignInScreen> {
   final email = TextEditingController(), password = TextEditingController();
   bool busy = false;
+  bool creating = false;
+  String? notice;
   String? error;
   @override
   void dispose() {
@@ -108,10 +113,27 @@ class _SignInState extends State<SignInScreen> {
       error = null;
     });
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
-        email: email.text.trim(),
-        password: password.text,
-      );
+      if (creating) {
+        if (password.text.length < 10) {
+          setState(() => error = 'Use a password with at least 10 characters.');
+          return;
+        }
+        final response = await Supabase.instance.client.auth.signUp(
+          email: email.text.trim(),
+          password: password.text,
+        );
+        if (mounted && response.session == null)
+          setState(() {
+            creating = false;
+            notice =
+                'Check your email and open the confirmation link. Then return here and sign in. If you already have an account, sign in with its password.';
+          });
+      } else {
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: email.text.trim(),
+          password: password.text,
+        );
+      }
     } on AuthException catch (e) {
       if (mounted) setState(() => error = e.message);
     } catch (_) {
@@ -179,12 +201,31 @@ class _SignInState extends State<SignInScreen> {
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: busy ? null : signIn,
-                  child: Text(busy ? 'Signing in…' : 'Sign in'),
+                  child: Text(
+                    busy
+                        ? 'Please wait…'
+                        : creating
+                        ? 'Create account'
+                        : 'Sign in',
+                  ),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Use the account provided by your company.',
-                  textAlign: TextAlign.center,
+                if (notice != null)
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Text(notice!),
+                  ),
+                TextButton(
+                  onPressed: busy
+                      ? null
+                      : () => setState(() {
+                          creating = !creating;
+                          error = null;
+                        }),
+                  child: Text(
+                    creating
+                        ? 'Already have an account? Sign in'
+                        : 'New owner? Create an account',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextButton.icon(

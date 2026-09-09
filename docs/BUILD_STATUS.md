@@ -1,5 +1,38 @@
 # CrewClocker implementation checkpoint — 2026-09-08
 
+## Field test 0.2 — 2026-09-09
+
+The user verified that 0.1 installs, launches, and reads native health on the
+Samsung Galaxy S26 Ultra. Screenshot showed location services on, permissions
+not granted, monitoring disabled, and zero pending observations.
+
+0.2 adds authenticated owner/company setup, isolated site/self-assignment writes,
+an attributed OpenStreetMap pin/radius editor, precise/background permission
+onboarding, assignment-generation-bound native capture, SQLite v2 migration,
+boot/package-update recovery, foreground retry upload and an observation list.
+Raw events remain separate from payroll. No company account/email was created
+on the user's behalf; the signed-in owner creates their own workspace in-app.
+
+Backend migrations 20260909002618 and 20260909003034 are deployed to
+`jpppwigxbnbhqlhsekkz` (Crew-time-tracker). Prototype records are preserved;
+unrestricted prototype reads and the public admin helper were restricted.
+`backend/tests/field_authorization.sql` passed 17 checks using rolled-back test
+fixtures. The database tests do not verify real email delivery or phone location.
+Seven Flutter tests pass, including the eleven existing logic checks. Analysis
+reports no issues. Native Kotlin/journal tests and the Android build are pending
+at the time of this source checkpoint.
+
+See ANDROID_PREVIEW.md for the field protocol and explicit limitations. Uploads
+run while Flutter is open/resumed; there is no native background network worker.
+Crew invitations/assignment editing, payroll/manual time/reconciliation, manager
+approval/export, localization and iOS are still outstanding.
+
+Remaining project-level advisories (not introduced by the field tables):
+[password leak protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection),
+[MFA configuration](https://supabase.com/docs/guides/auth/auth-mfa), and
+[Postgres security upgrade](https://supabase.com/docs/guides/platform/upgrading).
+These are production-readiness follow-ups. No new table/function advisory remains.
+
 ## Android build work — 2026-09-08
 
 Flutter 3.47.2 (Dart 3.13.2) is installed in the build session. The earlier SDK
