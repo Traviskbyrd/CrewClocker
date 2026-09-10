@@ -45,6 +45,24 @@ class FieldRepository {
         'cc_create_site',
         params: {'company': company, 'site': site, 'assigned_user': userId},
       );
+  Future<void> manageSite(String company, String siteId, {String? name, int? radius, bool delete = false}) async {
+    final wasEnabled = (await bridge.health())['enabled'] == true;
+    await bridge.stop();
+    await sync();
+    if ((await bridge.pending()).isNotEmpty) {
+      throw StateError('Sync all pending observations before changing a job. Monitoring is paused.');
+    }
+    try {
+      await client.rpc('cc_manage_site', params: {
+        'target': siteId, 'new_name': name, 'new_radius': radius, 'remove_site': delete,
+      });
+      final updated = await assignments(company);
+      if (wasEnabled && updated.isNotEmpty) await enable(updated);
+    } catch (_) {
+      throw StateError('The job change or monitoring refresh could not be confirmed. Check Jobs and monitoring status before retrying. Pending observations are kept.');
+    }
+  }
+
   Future<List<Map<String, dynamic>>> events() async => await client
       .from('cc_observations')
       .select('*, cc_assignments(cc_sites(name))')

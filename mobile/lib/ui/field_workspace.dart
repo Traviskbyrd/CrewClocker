@@ -7,6 +7,7 @@ import '../data/field_repository.dart';
 import '../platform/tracking_bridge.dart';
 import 'device_check.dart';
 import 'job_sites_map.dart';
+import 'edit_job.dart';
 
 class FieldWorkspace extends StatefulWidget {
   const FieldWorkspace({super.key, required this.repository});
@@ -23,7 +24,8 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
       pending = [];
   Map<String, dynamic> health = {};
   String? error;
-  bool initialized = false, busy = false, refreshing = false;
+  bool initialized = false, busy = false;
+  Future<void>? _refreshFlight;
   int page = 0;
   DateTime? lastSync;
   Timer? timer;
@@ -54,9 +56,9 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
     if (state == AppLifecycleState.resumed) refresh();
   }
 
-  Future<void> refresh() async {
-    if (refreshing) return;
-    refreshing = true;
+  Future<void> refresh() => _refreshFlight ??= _refresh().whenComplete(() => _refreshFlight = null);
+
+  Future<void> _refresh() async {
     String? problem;
     try {
       final cs = await repo.companies();
@@ -104,7 +106,7 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
           'Could not read native tracking status. Close and reopen the app.';
     }
     if (mounted) setState(() => error = problem);
-    refreshing = false;
+
   }
 
   Future<void> act(Future<void> Function() action) async {
@@ -114,9 +116,11 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
       error = null;
     });
     try {
+      if (_refreshFlight != null) await _refreshFlight;
       await action();
       await refresh();
     } catch (e) {
+      await refresh();
       if (mounted)
         setState(() => error = 'Action could not finish: ${e.toString()}');
     } finally {
@@ -345,6 +349,29 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
     );
   }
 
+  Future<void> manageJob(Map<String, dynamic> site, String choice) async {
+    if (busy) return;
+    JobEdit? edit;
+    if (choice == 'edit') {
+      edit = await Navigator.of(context).push<JobEdit>(MaterialPageRoute(builder: (_) => EditJobPage(
+        name: site['name'] as String, radius: (site['radius_meters'] as num).toInt())));
+      if (edit == null || !mounted) return;
+      if (edit.name == site['name'] && edit.radius == site['radius_meters']) return;
+    } else {
+      final confirmed = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete job?'),
+        content: Text('Remove “${site['name']}” from Jobs, the map, and monitoring? Past observations will be kept.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Delete job')),
+        ],
+      ));
+      if (confirmed != true || !mounted) return;
+    }
+    await act(() => repo.manageSite(company!['id'] as String, site['id'] as String,
+      name: edit?.name, radius: edit?.radius, delete: choice == 'delete'));
+  }
+
   void openJobMap([String? siteId]) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => JobSitesMap(
       sites: assignments.map((a) => Map<String, dynamic>.from(a['cc_sites'] as Map)).toList(),
@@ -372,7 +399,14 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
           child: ListTile(
             leading: const Icon(Icons.place),
             onTap: () => openJobMap(s['id'] as String),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: owner ? PopupMenuButton<String>(
+              tooltip: 'Manage job', enabled: !busy,
+              onSelected: (choice) => manageJob(s, choice),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit name and radius')),
+                PopupMenuItem(value: 'delete', child: Text('Delete job')),
+              ],
+            ) : const Icon(Icons.chevron_right),
             title: Text(s['name'] as String),
             subtitle: Text(
               '${s['address']}\n${s['radius_meters']} m radius • assignment v${a['version']}',
@@ -383,7 +417,7 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
       }),
       const SizedBox(height: 16),
       const Text(
-        'This owner-led field build assigns new sites to your account. Crew invitations and assignment editing are a later step.',
+        'This owner-led field build assigns new sites to your account. Use each job’s menu to edit its name or radius, or delete it. Crew invitations are a later step.',
       ),
     ],
   );
@@ -724,11 +758,12 @@ class _FieldSiteEditorState extends State<FieldSiteEditor> {
           Text(
             'Radius: ${radius.round()} m / ${(radius * 3.28084).round()} ft',
           ),
+          const Text('Below 100 meters, detection may be less reliable. Test smaller circles on your phone.'),
           Slider(
             value: radius,
-            min: 100,
+            min: 25,
             max: 1000,
-            divisions: 36,
+            divisions: 195,
             onChanged: busy ? null : (v) => setState(() => radius = v),
           ),
           const Text(

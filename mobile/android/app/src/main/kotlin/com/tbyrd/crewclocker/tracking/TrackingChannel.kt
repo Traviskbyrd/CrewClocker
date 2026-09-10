@@ -92,7 +92,7 @@ class TrackingChannel(private val activity: Activity, messenger: BinaryMessenger
             require((s["assignment_version"] as Number).toInt()>0)
             require((s["lat"] as Number).toDouble() in -90.0..90.0)
             require((s["lng"] as Number).toDouble() in -180.0..180.0)
-            require((s["radius_meters"] as Number).toDouble() in 100.0..1000.0)
+            require((s["radius_meters"] as Number).toDouble() in 25.0..1000.0)
         }
         val json=JSONArray(sites.map { JSONObject(it) })
         val generation=UUID.randomUUID().toString()

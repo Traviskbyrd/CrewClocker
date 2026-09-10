@@ -1,5 +1,32 @@
 # CrewClocker build status — 2026-09-09
 
+## Job management 0.2.2 — 2026-09-10
+
+Jobs menus now offer Edit name and radius, and Delete job with confirmation.
+Radiuses support 25–1000 meters; below 100 meters the UI explains the need for
+phone testing. Native validation and server constraints use the same limits.
+
+Owner-only cc_manage_site saves an immutable replacement site and assignments,
+retiring the previous snapshot. Delete retires without a replacement. Historical
+names, radiuses, assignment versions and observations remain intact; delayed
+observations still ingest against the original assignment. SQL row locks reject
+stale edits and serialize concurrent changes. Retired assignments are excluded
+from the active Jobs list/map. Existing table ownership and no-hard-delete grants
+remain enforced. Migrations 20260910163620 and 20260910163849 deployed; the second
+removes a recursive policy found by the rolled-back management regression test.
+The management suite and original 17 backend checks pass. Advisors report only
+the three already documented project-level advisories.
+
+The editing phone stops capture, syncs pending observations, changes the job,
+then registers the updated assignments if monitoring was previously on. Deleting
+the last site leaves monitoring paused. On failure, Jobs/native status refresh
+and an error guides recovery; no pending observations are erased. Other devices
+running an older assignment snapshot require a monitoring refresh; remote live
+revocation is not yet implemented. Do not deploy this as a multi-device crew pilot.
+CLI download was unavailable in this runtime; migration filenames above are the
+authoritative versions returned by the remote migration API, not invented dates.
+Android/Flutter build validation pending at source checkpoint.
+
 ## Map update 0.2.1 — 2026-09-10
 
 Adds Jobs → View job map, with numbered/color-coded saved site pins, meter-based
