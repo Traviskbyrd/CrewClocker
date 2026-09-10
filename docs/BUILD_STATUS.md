@@ -7,7 +7,14 @@ radius circles, site selection, and Show all sites framing the complete circles.
 Tapping a job in the list opens its pin. The map reads the caller's already loaded
 assignments and does not change pins, permissions, registration, or observations.
 Existing accounts and the SQLite journal are retained on an in-place update signed
-with the same internal certificate. Build validation pending at source checkpoint.
+with the same internal certificate. Analysis, seven Flutter tests, three native journal tests, and ARM64 APK build pass.
+Build: https://github.com/Traviskbyrd/CrewClocker/actions/runs/34500779046
+Source: `399bd4abd1a52aeb28ce45877c4f4213a1ddf930`.
+Delivered `CrewClocker-map-0.2.1.apk`: 87,615,036 bytes, SHA-256
+`4eb58a86705076039d884b0a908869d5758b809dedd4d1c5192c295012001aed`.
+Archive and build APK checksums matched; final ZIP integrity and v2/v3 signatures
+verified. Certificate matches 0.2. Install as an update; do not uninstall or clear
+storage. Map rendering with actual saved sites awaits phone confirmation.
 
 Phone evidence from 0.2: owner setup, two saved assignments, precise/background
 permissions and two registered geofences succeeded on the Samsung Galaxy S26 Ultra.
