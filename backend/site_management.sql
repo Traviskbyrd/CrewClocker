@@ -12,9 +12,9 @@ create policy assignment_retire on public.cc_assignments for update to authentic
 -- Historical names remain readable by the employee assigned at capture time.
 alter policy site_read on public.cc_sites using(cc_private.is_owner(company_id) or id in (
  select site_id from public.cc_assignments where user_id=(select auth.uid())));
--- Only active sites can receive new assignments.
-alter policy assignment_create on public.cc_assignments with check(cc_private.is_owner(company_id) and exists(
- select 1 from public.cc_sites s where s.id=site_id and s.company_id=cc_assignments.company_id and not s.retired));
+-- Assignment creation keeps the existing owner-only policy. A site-read lookup
+-- here would recurse through site_read -> cc_assignments policies.
+alter policy assignment_create on public.cc_assignments with check(cc_private.is_owner(company_id));
 
 create function public.cc_manage_site(target uuid, new_name text default null, new_radius integer default null, remove_site boolean default false)
 returns uuid language plpgsql security invoker set search_path='' as $$

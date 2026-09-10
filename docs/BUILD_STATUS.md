@@ -25,7 +25,14 @@ running an older assignment snapshot require a monitoring refresh; remote live
 revocation is not yet implemented. Do not deploy this as a multi-device crew pilot.
 CLI download was unavailable in this runtime; migration filenames above are the
 authoritative versions returned by the remote migration API, not invented dates.
-Android/Flutter build validation pending at source checkpoint.
+Analysis, all eight Flutter tests, all three native journal tests, and the ARM64
+build passed: https://github.com/Traviskbyrd/CrewClocker/actions/runs/34503530056
+Built source: `280caf283842f0c4d6f89a2cee98810cd899608e`.
+Delivered `CrewClocker-jobs-0.2.2.apk`: 87,619,132 bytes; SHA-256
+`d120cb7b892bef8c97ed75399054c0ef99bf079d1ab2b120627016bcfb629772`.
+Archive/build checksums and final ZIP integrity checked; APK v2/v3 signatures
+verify with the same internal certificate as 0.2/0.2.1. Install in place.
+Physical edit/delete/re-registration behavior awaits phone confirmation.
 
 ## Map update 0.2.1 — 2026-09-10
 

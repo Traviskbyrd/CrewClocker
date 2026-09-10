@@ -84,3 +84,17 @@ full localization, and iOS. This version records client-reported observations;
 it does not prove payable work or calculate payroll.
 
 See BUILD_STATUS.md for verified checks and remaining service advisories.
+
+
+## Edit and delete jobs (0.2.2)
+
+Use the three-dot menu beside a job in Jobs. Edit its name and radius (25–1000 m),
+then save. Radiuses below 100 m can miss/delay Android geofence detection; verify
+with a phone visit. The app pauses capture and syncs first, then refreshes the
+registered assignments if monitoring was enabled. If saving or re-registration
+fails, inspect Jobs and Today before retrying; observations remain on the phone.
+
+Delete asks for confirmation, removes the active job from Jobs/map/monitoring,
+and keeps historical observations and original job details. Deleting the last
+site leaves monitoring paused. Past observations retain the old name after edits.
+Update in place using the retained internal signing certificate; do not uninstall.
