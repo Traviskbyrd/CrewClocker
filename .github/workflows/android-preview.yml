@@ -56,6 +56,10 @@ jobs:
           mkdir -p build/delivery
           cp build/app/outputs/flutter-apk/app-debug.apk build/delivery/CrewClocker-preview.apk
           cp ../docs/ANDROID_PREVIEW.md build/delivery/READ-ME.md
+          # Retain the official signing tool with the artifact for private re-signing.
+          signer_jar=$(find "$ANDROID_HOME/build-tools" -path '*/lib/apksigner.jar' | sort -V | tail -n 1)
+          test -n "$signer_jar"
+          cp "$signer_jar" build/delivery/apksigner.jar
           cd build/delivery
           sha256sum CrewClocker-preview.apk > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
