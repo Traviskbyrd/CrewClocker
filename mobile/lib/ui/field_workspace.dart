@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/field_repository.dart';
 import '../platform/tracking_bridge.dart';
 import 'device_check.dart';
+import 'job_sites_map.dart';
 
 class FieldWorkspace extends StatefulWidget {
   const FieldWorkspace({super.key, required this.repository});
@@ -344,9 +345,18 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
     );
   }
 
+  void openJobMap([String? siteId]) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => JobSitesMap(
+      sites: assignments.map((a) => Map<String, dynamic>.from(a['cc_sites'] as Map)).toList(),
+      initialSiteId: siteId,
+    )));
+  }
+
   Widget jobs() => ListView(
     padding: const EdgeInsets.all(20),
     children: [
+      OutlinedButton.icon(onPressed: () => openJobMap(),
+        icon: const Icon(Icons.map_outlined), label: const Text('View job map')),
       if (owner)
         FilledButton.icon(
           onPressed: busy ? null : newSite,
@@ -361,6 +371,8 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
         return Card(
           child: ListTile(
             leading: const Icon(Icons.place),
+            onTap: () => openJobMap(s['id'] as String),
+            trailing: const Icon(Icons.chevron_right),
             title: Text(s['name'] as String),
             subtitle: Text(
               '${s['address']}\n${s['radius_meters']} m radius • assignment v${a['version']}',

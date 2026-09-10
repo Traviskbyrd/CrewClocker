@@ -1,5 +1,20 @@
 # CrewClocker build status — 2026-09-09
 
+## Map update 0.2.1 — 2026-09-10
+
+Adds Jobs → View job map, with numbered/color-coded saved site pins, meter-based
+radius circles, site selection, and Show all sites framing the complete circles.
+Tapping a job in the list opens its pin. The map reads the caller's already loaded
+assignments and does not change pins, permissions, registration, or observations.
+Existing accounts and the SQLite journal are retained on an in-place update signed
+with the same internal certificate. Build validation pending at source checkpoint.
+
+Phone evidence from 0.2: owner setup, two saved assignments, precise/background
+permissions and two registered geofences succeeded on the Samsung Galaxy S26 Ultra.
+Screenshots show enter/dwell/exit observations stored on the server. User reports
+Home and Wanson are close together; overlapping event intervals need comparison
+with the saved circles and actual movements before claiming tracking accuracy.
+
 ## Field test 0.2 — 2026-09-09
 
 The user verified that 0.1 installs, launches, and reads native health on the
