@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/field_repository.dart';
 import 'phone_access.dart';
+
+String operationError(Object e) => e is PostgrestException ? e.message : 'Check your connection and refresh before trying again.';
 
 typedef Row = Map<String, dynamic>;
 List<Row> rows(dynamic value) => (value as List? ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
@@ -80,7 +83,7 @@ class _OperationsPageState extends State<OperationsPage> {
     try {
       final result = Map<String, dynamic>.from(await rpc('state') as Map);
       if (mounted) setState(() => data = result);
-    } catch (e) { if (mounted) setState(() => error = 'Could not refresh: $e'); }
+    } catch (e) { if (mounted) setState(() => error = 'Could not refresh: ${operationError(e)}'); }
     finally { if (mounted) setState(() => busy = false); }
   }
   Future<void> run(String action, Row args) async {
@@ -97,7 +100,7 @@ class _OperationsPageState extends State<OperationsPage> {
       } else { notice = 'Saved.'; }
       final resultState = Map<String, dynamic>.from(await rpc('state') as Map);
       if (mounted) setState(() => data = resultState);
-    } catch (e) { if (mounted) setState(() => error = 'Could not save: $e'); }
+    } catch (e) { if (mounted) setState(() => error = 'Could not save: ${operationError(e)}'); }
     finally { if (mounted) setState(() => busy = false); }
   }
   Future<void> form(String title, String action, List<EntryField> fields, {Row base = const {}, String? explanation}) async {
@@ -260,7 +263,7 @@ class _CompanyInvitationsState extends State<CompanyInvitations> {
   Future<void> load() async {
     setState(() => busy = true);
     try { final result = rows(await rpc('pending_invites', {})); if (mounted) setState(() { invites = result; error = null; }); }
-    catch (e) { if (mounted) setState(() => error = '$e'); }
+    catch (e) { if (mounted) setState(() => error = operationError(e)); }
     finally { if (mounted) setState(() => busy = false); }
   }
   Future<void> accept([Row? invite]) async {
@@ -270,7 +273,7 @@ class _CompanyInvitationsState extends State<CompanyInvitations> {
     try {
       final result = await rpc('accept_invite', {...values, if (invite != null) 'id': invite['id']});
       if (mounted) Navigator.pop(context, result['company_id'] as String);
-    } catch (e) { if (mounted) setState(() => error = '$e'); }
+    } catch (e) { if (mounted) setState(() => error = operationError(e)); }
     finally { if (mounted) setState(() => busy = false); }
   }
   @override

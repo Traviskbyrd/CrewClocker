@@ -1,4 +1,63 @@
-# CrewClocker build status — 2026-09-09
+# CrewClocker build status — 2026-09-11
+
+## Operations preview 0.3.0 — 2026-09-11
+
+Implemented phone OTP sign-in and linking an existing email account; email fallback remains.
+Live Auth settings checked: phone provider DISABLED, email enabled. SMS delivery is
+not configured or verified. An SMS provider must be connected and Phone Auth enabled
+before phone-only crew onboarding works. No SMS was sent during development.
+
+Today now opens Attendance, Timecards and People. Owner can create employee/sub crews,
+invite a verified phone/email contact, configure lead/supervisor access, change roles,
+and deactivate members. Invitation instructions are copied for the owner to send;
+no automatic invitations are sent. Join invitations from Account or company setup.
+Existing email users must link their phone from Account, avoiding duplicate identities.
+
+Attendance includes arrival windows, owner crew/job assignment, assigned-supervisor
+scheduling, confirmation/delay/arrival/departure/crew-remaining reports, and separate
+individual-phone observations. Missing uploaded observations are never proof of absence.
+Crew report headcounts are attributed statements, not GPS verification of each worker.
+Subcontractor roles cannot create or read employee timecards. Employees/representatives
+see only their own detected phone events; leads and scoped supervisors see their crews.
+Schedule rosters retain historical membership; new invitees join still-open schedules.
+
+Employee cards support clock in/out, breaks, manual entry, corrections with reasons,
+submission, assigned reviewer approval/correction requests, audit history, and weekly
+loaded-card totals. No self-approval, overlapping cards or stale-revision reviews.
+Closed detected visits can become review drafts; ambiguous overlapping visits are both
+skipped for manual job selection. Missing exits are not guessed. These are evaluation
+records, not a payroll export or wage/overtime calculation.
+
+Blue actions, green positive states, red attention states; launcher and map updated.
+Existing map/job editing and native journal preserved. An enabled phone reconciles
+changed assignment IDs when the app refreshes; no automatic re-enable after user pause.
+Company switching stops monitoring and syncs before changing context. Remote revocation
+cannot stop an offline/closed phone immediately; delayed historical observations remain
+accepted to preserve the journal. Do not promise a real-time workforce location feed.
+
+Backend: versioned migrations 20260911074449, 20260911074957, 20260911075808,
+20260911075918 deployed. Canonical backend/operations.sql is for clean installation
+AFTER the field and site-management schema, not reapplication over these migrations.
+Remote-returned versions used because the CLI is unavailable in this runtime.
+The existing 17 authorization checks, site-management suite and new operations suite
+pass with synthetic fixtures rolled back. New suite covers phone/contact matching,
+role/tenant denial, private-table denial, supervisor job scope, attendance-only subs,
+clock/break closing, double clocks, correction audit, stale review, import idempotency
+and rejection of both overlapping site visits. No real crew/time records were created.
+
+Nine private operational tables intentionally have RLS with no policies and no client
+table privileges. Scoped private definer RPC authenticates and checks each operation;
+public API wrapper is invoker. Advisor's nine informational no-policy notices are
+expected deny-by-default behavior, not requests to grant client table access.
+The three pre-existing project advisories remain: leaked-password protection, MFA,
+and Postgres security upgrade (remediation links below in earlier status).
+
+Pending validation: final Android build and signatures; physical multi-account testing;
+SMS provider configuration and phone delivery; production payroll/export requirements.
+Cards are online-only. No push alerts or SMS reminders. Attendance loads 30 days back /
+90 days ahead; timecards load 300 accessible records and totals explicitly cover those
+records only. Weekly cards group by local start date, including overnight cards. New
+schedules should be checked after roster changes. No iOS implementation in this build.
 
 ## Job management 0.2.2 — 2026-09-10
 

@@ -16,7 +16,7 @@ class JobSitesMap extends StatefulWidget {
 class _JobSitesMapState extends State<JobSitesMap> {
   final controller = MapController();
   int? selected;
-  static const colors = [Colors.teal, Colors.deepOrange, Colors.indigo,
+  static const colors = [Colors.blue, Colors.green, Colors.red,
     Colors.purple, Colors.green, Colors.brown];
   LatLng point(Map<String, dynamic> s) => LatLng(
     (s['lat'] as num).toDouble(), (s['lng'] as num).toDouble());

@@ -1,56 +1,4 @@
-begin;
--- Operational records are private. The API exposes only scoped state-machine RPCs.
-alter table public.cc_sites add column job_key uuid not null default gen_random_uuid();
-create index cc_sites_job_key_idx on public.cc_sites(job_key);
-create table cc_private.crews(id uuid primary key default gen_random_uuid(), company_id uuid not null references public.cc_companies(id), name text not null check(length(trim(name)) between 1 and 160), kind text not null check(kind in ('employee','sub')), lead_id uuid references auth.users(id), supervisor_id uuid references auth.users(id));
-create table cc_private.people(company_id uuid not null references public.cc_companies(id), user_id uuid not null references auth.users(id), name text not null, role text not null check(role in ('employee','supervisor','sub_lead','sub_rep')), crew_id uuid references cc_private.crews(id), active boolean not null default true, primary key(company_id,user_id));
-insert into cc_private.people(company_id,user_id,name,role) select m.company_id,m.user_id,m.display_name,'employee' from public.cc_memberships m join public.cc_companies c on c.id=m.company_id where m.user_id<>c.owner_id;
-create table cc_private.invites(id uuid primary key default gen_random_uuid(), company_id uuid not null references public.cc_companies(id), contact text not null, role text not null check(role in ('employee','supervisor','sub_lead','sub_rep')), crew_id uuid references cc_private.crews(id), token_hash text not null unique, expires_at timestamptz not null default now()+interval '7 days', used_by uuid references auth.users(id), revoked boolean not null default false);
-create table cc_private.crew_sites(crew_id uuid not null references cc_private.crews(id), job_key uuid not null, primary key(crew_id,job_key));
-create table cc_private.schedules(id uuid primary key default gen_random_uuid(), company_id uuid not null references public.cc_companies(id), crew_id uuid not null references cc_private.crews(id), site_id uuid not null references public.cc_sites(id), window_start timestamptz not null, window_end timestamptz not null, notes text not null default '', cancelled boolean not null default false, check(window_end>=window_start and window_end<=window_start+interval '24 hours'));
-create table cc_private.schedule_people(schedule_id uuid not null references cc_private.schedules(id), user_id uuid not null references auth.users(id), name text not null, primary key(schedule_id,user_id));
-alter table cc_private.schedule_people enable row level security;
-revoke all on cc_private.schedule_people from public,anon,authenticated;
-create table cc_private.reports(id uuid primary key default gen_random_uuid(), schedule_id uuid not null references cc_private.schedules(id), reporter_id uuid not null references auth.users(id), reporter_name text not null, kind text not null check(kind in ('confirm','arrival','departure','delay','crew_remaining')), headcount integer check(headcount between 1 and 100), note text not null default '', reported_at timestamptz not null default now());
-create table cc_private.cards(id uuid primary key default gen_random_uuid(), company_id uuid not null references public.cc_companies(id), user_id uuid not null references auth.users(id), site_id uuid not null references public.cc_sites(id), started_at timestamptz not null, ended_at timestamptz, break_seconds integer not null default 0 check(break_seconds>=0), break_started timestamptz, status text not null default 'draft' check(status in ('draft','submitted','approved','changes_requested','void')), note text not null default '', source_key text unique, revision integer not null default 1, check(ended_at is null or ended_at>started_at));
-create unique index cards_one_open on cc_private.cards(user_id) where ended_at is null and status<>'void';
-create index cards_user_time on cc_private.cards(user_id,started_at);
-create table cc_private.card_audit(id bigint generated always as identity primary key, card_id uuid not null references cc_private.cards(id), actor_id uuid not null references auth.users(id), action text not null, reason text not null default '', recorded_at timestamptz not null default now(), before_data jsonb, after_data jsonb);
--- Defense in depth; clients have no table privileges in this schema.
-alter table cc_private.crews enable row level security;
-revoke all on cc_private.crews from public,anon,authenticated;
-alter table cc_private.people enable row level security;
-revoke all on cc_private.people from public,anon,authenticated;
-alter table cc_private.invites enable row level security;
-revoke all on cc_private.invites from public,anon,authenticated;
-alter table cc_private.crew_sites enable row level security;
-revoke all on cc_private.crew_sites from public,anon,authenticated;
-alter table cc_private.schedules enable row level security;
-revoke all on cc_private.schedules from public,anon,authenticated;
-alter table cc_private.reports enable row level security;
-revoke all on cc_private.reports from public,anon,authenticated;
-alter table cc_private.cards enable row level security;
-revoke all on cc_private.cards from public,anon,authenticated;
-alter table cc_private.card_audit enable row level security;
-revoke all on cc_private.card_audit from public,anon,authenticated;
-
-create function cc_private.actor_role(c uuid) returns text language sql stable security definer set search_path='' as $$
- select case when exists(select 1 from public.cc_companies where id=c and owner_id=auth.uid()) then 'owner'
- else (select role from cc_private.people where company_id=c and user_id=auth.uid() and active) end where auth.uid() is not null
-$$;
-create function cc_private.crew_access(c uuid, cr uuid) returns boolean language sql stable security definer set search_path='' as $$
- select auth.uid() is not null and exists(select 1 from cc_private.crews g where g.company_id=c and g.id=cr and (
- cc_private.actor_role(c)='owner' or (cc_private.actor_role(c)='supervisor' and g.supervisor_id=auth.uid()) or (cc_private.actor_role(c)='sub_lead' and g.lead_id=auth.uid()) or exists(select 1 from cc_private.people p where p.company_id=c and p.user_id=auth.uid() and p.crew_id=g.id and p.active)))
-$$;
-create function cc_private.review_access(c uuid, worker uuid) returns boolean language sql stable security definer set search_path='' as $$
- select auth.uid() is not null and worker<>auth.uid() and (cc_private.actor_role(c)='owner' or (cc_private.actor_role(c)='supervisor' and exists(select 1 from cc_private.people p join cc_private.crews g on g.id=p.crew_id where p.company_id=c and p.user_id=worker and g.supervisor_id=auth.uid() and g.kind='employee')))
-$$;
-revoke all on function cc_private.actor_role(uuid),cc_private.crew_access(uuid,uuid),cc_private.review_access(uuid,uuid) from public,anon,authenticated;
-
--- All mutations authenticate the caller and check company, role, and row scope.
--- Private definer is intentional: clients cannot bypass invitation acceptance,
--- timecard transitions or audit insertion through direct table writes.
-create function cc_private.operations(c uuid, op text, d jsonb) returns jsonb
+create or replace function cc_private.operations(c uuid, op text, d jsonb) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare uid uuid:=auth.uid(); r text; cr cc_private.crews%rowtype; inv cc_private.invites%rowtype;
  p cc_private.people%rowtype; s public.cc_sites%rowtype; sched cc_private.schedules%rowtype;
@@ -82,7 +30,6 @@ begin
     select inv.company_id,st.id,uid from cc_private.crew_sites cs join public.cc_sites st on st.job_key=cs.job_key and not st.retired where cs.crew_id=inv.crew_id
     on conflict(site_id,user_id) do update set active=true;
   end if;
-  insert into cc_private.schedule_people(schedule_id,user_id,name) select sc.id,uid,trim(d->>'name') from cc_private.schedules sc where sc.company_id=inv.company_id and sc.crew_id=inv.crew_id and not sc.cancelled and sc.window_end>=now() on conflict do nothing;
   return jsonb_build_object('company_id',inv.company_id);
  end if;
  r:=cc_private.actor_role(c);
@@ -101,7 +48,7 @@ begin
        coalesce((select jsonb_agg(to_jsonb(rr) order by rr.reported_at) from cc_private.reports rr where rr.schedule_id=sc.id),'[]'::jsonb) as reports,
        coalesce((select jsonb_agg(jsonb_build_object('person',pe.name,'transition',o.transition,'observed_at',o.observed_at,'received_at',o.received_at) order by o.observed_at)
          from public.cc_observations o join public.cc_assignments a on a.id=o.assignment_id join public.cc_sites os on os.id=a.site_id join cc_private.schedule_people pe on pe.schedule_id=sc.id and pe.user_id=o.employee_id
-         where os.job_key=st.job_key and (r not in ('employee','sub_rep') or o.employee_id=uid) and o.observed_at between sc.window_start-interval '2 hours' and sc.window_start+interval '24 hours'),'[]'::jsonb) as detected
+         where os.job_key=st.job_key and o.observed_at between sc.window_start-interval '2 hours' and sc.window_start+interval '24 hours'),'[]'::jsonb) as detected
      from cc_private.schedules sc join public.cc_sites st on st.id=sc.site_id join cc_private.crews g on g.id=sc.crew_id
      where sc.company_id=c and cc_private.crew_access(c,sc.crew_id) and sc.window_start between now()-interval '30 days' and now()+interval '90 days'
    ) x),'[]'::jsonb),
@@ -150,9 +97,6 @@ begin
    end if;
    update cc_private.people set role=role_value,crew_id=crew,active=coalesce((d->>'active')::boolean,true) where company_id=c and user_id=worker;
    update public.cc_assignments set active=false where company_id=c and user_id=worker;
-   if crew is not null and coalesce((d->>'active')::boolean,true) then
-    insert into cc_private.schedule_people(schedule_id,user_id,name) select sc.id,worker,p.name from cc_private.schedules sc where sc.company_id=c and sc.crew_id=crew and not sc.cancelled and sc.window_end>=now() on conflict do nothing;
-   end if;
    update cc_private.crews set lead_id=null where company_id=c and lead_id=worker;
    update cc_private.crews set supervisor_id=null where company_id=c and supervisor_id=worker;
    if crew is not null and coalesce((d->>'active')::boolean,true) then
@@ -268,37 +212,3 @@ begin
  insert into cc_private.card_audit(card_id,actor_id,action,reason,before_data,after_data) values(card.id,uid,op,reason,before_card,to_jsonb(card));
  return to_jsonb(card);
 end $$;
-revoke all on function cc_private.operations(uuid,text,jsonb) from public,anon;
-grant execute on function cc_private.operations(uuid,text,jsonb) to authenticated;
-create function public.cc_operations(company uuid, action text, data jsonb default '{}'::jsonb) returns jsonb
-language sql security invoker set search_path='' as $$ select cc_private.operations(company,action,data) $$;
-revoke all on function public.cc_operations(uuid,text,jsonb) from public,anon;
-grant execute on function public.cc_operations(uuid,text,jsonb) to authenticated;
-create or replace function public.cc_manage_site(target uuid, new_name text default null, new_radius integer default null, remove_site boolean default false)
-returns uuid language plpgsql security invoker set search_path='' as $$
-declare old public.cc_sites%rowtype; saved uuid; a public.cc_assignments%rowtype;
-begin
- select * into old from public.cc_sites where id=target for update;
- if old.id is null or not cc_private.is_owner(old.company_id) then
-  raise exception 'Owner access required' using errcode='42501'; end if;
- if old.retired then raise exception 'Job already changed. Refresh Jobs before trying again.' using errcode='40001'; end if;
- if remove_site is null then raise exception 'Choose edit or delete' using errcode='22023'; end if;
- if not remove_site then
-  if new_name is null or length(trim(new_name)) not between 1 and 160 or new_radius is null or new_radius not between 25 and 1000 then
-   raise exception 'Enter a name and radius from 25 to 1000 meters' using errcode='22023'; end if;
-  insert into public.cc_sites(company_id,name,address,lat,lng,radius_meters,job_key)
-   values(old.company_id,trim(new_name),old.address,old.lat,old.lng,new_radius,old.job_key) returning id into saved;
- end if;
- for a in select * from public.cc_assignments where site_id=target and active for update loop
-  update public.cc_assignments set active=false where id=a.id;
-  if not remove_site then
-   insert into public.cc_assignments(company_id,site_id,user_id,version)
-    values(a.company_id,saved,a.user_id,a.version+1);
-  end if;
- end loop;
- update public.cc_sites set retired=true where id=target;
- return saved;
-end $$;
-
-notify pgrst,'reload schema';
-commit;

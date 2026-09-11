@@ -1,3 +1,36 @@
+# CrewClocker operations preview 0.3.0
+
+Install the privately signed CrewClocker-operations-0.3.0.apk as an update to 0.2.2.
+Keep the existing installation and app data. The CI archive APK is an intermediate
+artifact with a temporary debug signature, not the final update package.
+
+Open Today → Attendance & arrival commitments, Timecards, or People, crews & invitations.
+Create a crew, invite a verified contact, accept via Account → Company invitations,
+then assign the crew to a job and schedule an arrival window. New crew members must
+reopen their app and enable monitoring after granting location permissions.
+
+Subcontractor attendance records company representation, not payroll. A lead can
+report Crew working without lead and the headcount. Phone detections are shown
+separately from those reports; they cannot prove the whole crew is present.
+
+Phone sign-in and linking are implemented, but live Phone Auth was disabled at build
+time. Configure an SMS provider and enable Phone in Supabase Authentication first:
+https://supabase.com/docs/guides/auth/phone-login
+Existing email users should sign in with email, then Account → Link phone number.
+No email is required for a new phone account after SMS service is configured.
+
+Employee field test: add a manual draft for a past period, correct its breaks, submit,
+and use a separate owner/assigned supervisor account to request a correction or approve.
+Clock in/out and breaks require internet. Detected overlapping jobs are skipped for
+manual choice; review detected draft times before submitting. Never treat preview
+records as payroll-ready. No self-approval, payroll export, overtime calculation,
+background server sync, or push attendance alerts in this version.
+
+Read docs/BUILD_STATUS.md for exact verification and limitations.
+
+---
+Historical installation notes follow.
+
 # CrewClocker field test 0.2
 
 Target: Travis's Samsung Galaxy S26 Ultra. This is an owner-led location-event

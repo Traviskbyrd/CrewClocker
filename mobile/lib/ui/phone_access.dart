@@ -45,7 +45,7 @@ class _PhoneAccessState extends State<PhoneAccess> {
         if (cooldown <= 0) t.cancel();
       });
     } on AuthException catch (e) {
-      if (mounted) setState(() => error = e.message);
+      if (mounted) setState(() => error = e.message.toLowerCase().contains('disabled') ? 'Text-message sign-in has not been enabled yet. Use email for now, or ask your company owner to finish SMS setup.' : e.message);
     } catch (_) {
       if (mounted) setState(() => error = 'Could not send a code. Check your connection and try again.');
     } finally { if (mounted) setState(() => busy = false); }
@@ -60,7 +60,7 @@ class _PhoneAccessState extends State<PhoneAccess> {
       await Supabase.instance.client.auth.verifyOTP(phone: sentTo!, token: code.text.trim(), type: widget.link ? OtpType.phoneChange : OtpType.sms);
       if (widget.link && mounted) Navigator.pop(context, true);
     } on AuthException catch (e) {
-      if (mounted) setState(() => error = e.message);
+      if (mounted) setState(() => error = e.message.toLowerCase().contains('disabled') ? 'Text-message sign-in has not been enabled yet. Use email for now, or ask your company owner to finish SMS setup.' : e.message);
     } catch (_) {
       if (mounted) setState(() => error = 'Could not verify the code. Try again when connected.');
     } finally { if (mounted) setState(() => busy = false); }
