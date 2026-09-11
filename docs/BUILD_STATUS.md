@@ -52,9 +52,20 @@ expected deny-by-default behavior, not requests to grant client table access.
 The three pre-existing project advisories remain: leaked-password protection, MFA,
 and Postgres security upgrade (remediation links below in earlier status).
 
-Pending validation: final Android build and signatures; physical multi-account testing;
-SMS provider configuration and phone delivery; production payroll/export requirements.
-Cards are online-only. No push alerts or SMS reminders. Attendance loads 30 days back /
+Final verification: Flutter analysis, all 12 Flutter tests, 11 standalone Dart logic
+checks, three native journal tests, and the Android ARM64 build passed.
+Build: https://github.com/Traviskbyrd/CrewClocker/actions/runs/34577279904
+Built source: `204a89ff0e62c673a45f61037e5cdce6062da6b3`.
+Delivered `CrewClocker-operations-0.3.0.apk`: 87,668,284 bytes; SHA-256
+`5288ab32ded1255bc1b78de9861074ca0827f94345f592c313a89fcb1b9b5308`.
+Archive digest, original APK checksum, package/version, final ZIP integrity and v2/v3
+signatures verified. Same retained internal certificate as prior field updates;
+install in place without uninstalling or clearing app data.
+
+Still awaiting physical multi-account testing, SMS provider configuration and phone
+delivery, and production payroll/export requirements.
+Owner-authored cards have no eligible reviewer in this initial role model; test
+approval with a separate employee account. Cards are online-only. No push alerts or SMS reminders. Attendance loads 30 days back /
 90 days ahead; timecards load 300 accessible records and totals explicitly cover those
 records only. Weekly cards group by local start date, including overnight cards. New
 schedules should be checked after roster changes. No iOS implementation in this build.
