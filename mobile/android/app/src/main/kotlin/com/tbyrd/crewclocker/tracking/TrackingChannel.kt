@@ -37,7 +37,9 @@ class TrackingChannel(private val activity: Activity, messenger: BinaryMessenger
             when(call.method) {
                 "health" -> {
                     val location=activity.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                    result.success(mapOf("fineLocation" to allowed(Manifest.permission.ACCESS_FINE_LOCATION),
+                    val savedSites=JSONArray(prefs.getString("sites","[]"))
+                    val assignmentIds=(0 until savedSites.length()).map { savedSites.getJSONObject(it).getString("assignment_id") }
+                    result.success(mapOf("assignmentIds" to assignmentIds,"fineLocation" to allowed(Manifest.permission.ACCESS_FINE_LOCATION),
                         "backgroundLocation" to (Build.VERSION.SDK_INT<29 || allowed(Manifest.permission.ACCESS_BACKGROUND_LOCATION)),
                         "locationServices" to (if(Build.VERSION.SDK_INT>=28) location.isLocationEnabled else (location.isProviderEnabled(LocationManager.GPS_PROVIDER) || location.isProviderEnabled(LocationManager.NETWORK_PROVIDER))),
                         "enabled" to prefs.getBoolean("enabled",false), "registeredSites" to prefs.getInt("registered_sites",0),

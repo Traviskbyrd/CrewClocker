@@ -8,6 +8,8 @@ import '../platform/tracking_bridge.dart';
 import 'device_check.dart';
 import 'job_sites_map.dart';
 import 'edit_job.dart';
+import 'operations_page.dart';
+import 'phone_access.dart';
 
 class FieldWorkspace extends StatefulWidget {
   const FieldWorkspace({super.key, required this.repository});
@@ -27,6 +29,7 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
   bool initialized = false, busy = false;
   Future<void>? _refreshFlight;
   int page = 0;
+  String? selectedCompany;
   DateTime? lastSync;
   Timer? timer;
   FieldRepository get repo => widget.repository;
@@ -64,8 +67,8 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
       final cs = await repo.companies();
       // Prefer the caller's own company for this owner-led field test.
       cs.sort(
-        (a, b) => (a['owner_id'] == repo.userId ? 0 : 1).compareTo(
-          b['owner_id'] == repo.userId ? 0 : 1,
+        (a, b) => (a['id'] == selectedCompany ? 0 : a['owner_id'] == repo.userId ? 1 : 2).compareTo(
+          b['id'] == selectedCompany ? 0 : b['owner_id'] == repo.userId ? 1 : 2,
         ),
       );
       final as = cs.isEmpty
@@ -83,6 +86,7 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
         problem =
             'Observations are still on this phone. Check your connection and tap Sync. If you changed accounts, sign in to the original account.';
       }
+      await repo.reconcileAssignments(as);
       final es = await repo.events();
       if (mounted)
         setState(() {
@@ -178,6 +182,7 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
         busy: busy,
         error: error,
         onSignOut: () => act(repo.signOutSafely),
+        onJoin: joinCompany,
       );
     return Scaffold(
       appBar: AppBar(
@@ -223,6 +228,16 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
     );
   }
 
+  Future<void> joinCompany() async {
+    final id = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => CompanyInvitations(repository: repo)));
+    if (id != null) selectedCompany = id;
+    await refresh();
+  }
+  Future<void> openOperations([int tab = 0]) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => OperationsPage(repository: repo, companyId: company!['id'] as String, initialTab: tab)));
+    await refresh();
+  }
+
   Widget today() {
     final ready =
         health['fineLocation'] == true &&
@@ -242,6 +257,9 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 12),
+        FilledButton.icon(onPressed: busy ? null : () => openOperations(), icon: const Icon(Icons.groups_outlined), label: const Text('Attendance & arrival commitments')),
+        OutlinedButton.icon(onPressed: busy ? null : () => openOperations(1), icon: const Icon(Icons.schedule), label: const Text('Timecards')),
+        TextButton(onPressed: busy ? null : () => openOperations(2), child: const Text('People, crews & invitations')),
         Card(
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -417,7 +435,7 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
       }),
       const SizedBox(height: 16),
       const Text(
-        'This owner-led field build assigns new sites to your account. Use each job’s menu to edit its name or radius, or delete it. Crew invitations are a later step.',
+        'This owner-led field build assigns new sites to your account. Use each job’s menu to edit its name or radius, or delete it. Manage crew invitations and assignments in People and Attendance.',
       ),
     ],
   );
@@ -465,9 +483,13 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
     padding: const EdgeInsets.all(20),
     children: [
       ListTile(
-        title: Text(repo.client.auth.currentUser?.email ?? 'Signed in'),
+        title: Text(repo.client.auth.currentUser?.phone?.isNotEmpty == true ? repo.client.auth.currentUser!.phone! : repo.client.auth.currentUser?.email ?? 'Signed in'),
         subtitle: Text(owner ? 'Company owner' : 'Company member'),
       ),
+      if (companies.length > 1) DropdownButtonFormField<String>(initialValue: company!['id'] as String, decoration: const InputDecoration(labelText: 'Company'), items: companies.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text('${c['name']}'))).toList(), onChanged: busy ? null : (id) => act(() async { await repo.bridge.stop(); await repo.sync(); selectedCompany = id; })),
+      ListTile(title: const Text('Company invitations'), leading: const Icon(Icons.mail_outline), onTap: busy ? null : joinCompany),
+      ListTile(title: const Text('Link phone number'), leading: const Icon(Icons.sms_outlined), onTap: busy ? null : () async { await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PhoneAccess(link: true))); await refresh(); }),
+      ListTile(title: const Text('People & crews'), leading: const Icon(Icons.groups_outlined), onTap: busy ? null : () => openOperations(2)),
       ListTile(
         title: const Text('Device check'),
         leading: const Icon(Icons.phone_android),
@@ -494,11 +516,13 @@ class CompanySetup extends StatefulWidget {
     required this.busy,
     this.error,
     required this.onSignOut,
+    this.onJoin,
   });
   final Future<void> Function(String, String) onCreate;
   final bool busy;
   final String? error;
   final VoidCallback onSignOut;
+  final VoidCallback? onJoin;
   @override
   State<CompanySetup> createState() => _CompanySetupState();
 }
@@ -523,6 +547,8 @@ class _CompanySetupState extends State<CompanySetup> {
       child: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          FilledButton.icon(onPressed: widget.busy ? null : widget.onJoin, icon: const Icon(Icons.groups), label: const Text('Join an invited company')),
+          const SizedBox(height: 24),
           const Text(
             'Create your owner workspace',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -689,8 +715,8 @@ class _FieldSiteEditorState extends State<FieldSiteEditor> {
                         point: pin!,
                         radius: radius,
                         useRadiusInMeter: true,
-                        color: const Color(0x33087f8c),
-                        borderColor: const Color(0xff087f8c),
+                        color: const Color(0x331565c0),
+                        borderColor: const Color(0xff1565c0),
                         borderStrokeWidth: 2,
                       ),
                     ],
@@ -705,7 +731,7 @@ class _FieldSiteEditorState extends State<FieldSiteEditor> {
                         child: const Icon(
                           Icons.location_pin,
                           size: 40,
-                          color: Color(0xff087f8c),
+                          color: Color(0xff1565c0),
                         ),
                       ),
                     ],

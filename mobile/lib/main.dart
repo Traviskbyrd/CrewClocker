@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'data/field_repository.dart';
 import 'ui/field_workspace.dart';
 import 'ui/device_check.dart';
+import 'ui/phone_access.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +33,7 @@ class CrewClockerApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff087f8c)),
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff1565c0)).copyWith(primary: const Color(0xff1565c0), secondary: const Color(0xff2e7d32), error: const Color(0xffc62828)),
       scaffoldBackgroundColor: const Color(0xfff5f7fa),
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(),
@@ -75,7 +76,7 @@ class SessionGate extends StatelessWidget {
     return StreamBuilder<AuthState>(
       stream: client.auth.onAuthStateChange,
       builder: (context, snapshot) => client.auth.currentSession == null
-          ? const SignInScreen()
+          ? PhoneAccess(emailBuilder: (_) => const SignInScreen())
           : FieldWorkspace(
               key: ValueKey(client.auth.currentUser!.id),
               repository: FieldRepository(client),
@@ -158,7 +159,7 @@ class _SignInState extends State<SignInScreen> {
                 const Icon(
                   Icons.timer_outlined,
                   size: 64,
-                  color: Color(0xff087f8c),
+                  color: Color(0xff1565c0),
                 ),
                 const SizedBox(height: 20),
                 Text(

@@ -116,6 +116,15 @@ class FieldRepository {
     );
   }
 
+  Future<void> reconcileAssignments(List<Map<String, dynamic>> assignments) async {
+    final h = await bridge.health();
+    if (h['enabled'] != true || h['employeeId'] != userId) return;
+    final current = (h['assignmentIds'] as List? ?? []).cast<String>().toSet();
+    final desired = assignments.map((a) => a['id'] as String).toSet();
+    if (current.length == desired.length && current.containsAll(desired)) return;
+    if (assignments.isEmpty) { await bridge.stop(); } else { await enable(assignments); }
+  }
+
   Future<void> signOutSafely() async {
     await bridge.stop();
     final queued = await bridge.pending();
