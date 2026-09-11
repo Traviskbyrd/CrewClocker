@@ -81,6 +81,9 @@ begin
  perform set_config('role','authenticated',true);
  st:=public.cc_operations(co,'clock_out',jsonb_build_object('id',active_card));
  if (st->>'break_seconds')::integer<>600 or st->>'break_started' is not null or st->>'ended_at' is null then raise exception 'Clock-out did not finish break'; end if;
+ perform set_config('request.jwt.claim.sub',own::text,true);
+ st:=public.cc_operations(co,'state','{}');
+ if st->>'role'<>'owner' or jsonb_array_length(st->'cards')<>3 then raise exception 'Owner state failed: %',st->>'role'; end if;
  perform set_config('role','postgres',true);
  if (select count(*) from cc_private.card_audit where card_id=card)<>6 then raise exception 'Audit missing'; end if;
  if not exists(select 1 from cc_private.schedule_people where schedule_id=schedule and user_id=sub) then raise exception 'Schedule roster not snapshotted'; end if;
@@ -88,5 +91,5 @@ begin
  begin perform public.cc_operations(co,'state','{}'); raise exception 'Anonymous access'; exception when insufficient_privilege then null; end;
  perform set_config('role','postgres',true);
 end $$;
-select 'PASS: verified phone invitation, wrong-contact denial, idempotent join, role and tenant boundaries, private-table denial, supervisor job scope, sub attendance without payroll, timecard overlap, correction audit, stale review, visit import idempotency, frozen schedule roster and anonymous denial; rolled back' as result;
+select 'PASS: verified phone invitation, wrong-contact denial, idempotent join, role and tenant boundaries, private-table denial, supervisor job scope, sub attendance without payroll, timecard overlap, correction audit, stale review, visit import idempotency, ambiguous visit rejection, active breaks and double clocks, owner state, frozen schedule roster and anonymous denial; rolled back' as result;
 rollback;

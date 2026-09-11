@@ -230,8 +230,9 @@ class _FieldWorkspaceState extends State<FieldWorkspace>
 
   Future<void> joinCompany() async {
     final id = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => CompanyInvitations(repository: repo)));
-    if (id != null) selectedCompany = id;
-    await refresh();
+    if (id != null) {
+      await act(() async { await repo.bridge.stop(); await repo.sync(); selectedCompany = id; });
+    } else { await refresh(); }
   }
   Future<void> openOperations([int tab = 0]) async {
     await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => OperationsPage(repository: repo, companyId: company!['id'] as String, initialTab: tab)));
